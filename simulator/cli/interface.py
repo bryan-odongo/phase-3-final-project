@@ -2,6 +2,10 @@ class CLIInterface:
     def __init__(self, atm):
         self.atm = atm
 
+    def print_receipt_menu(self):
+        receipt_id = int(input("Enter receipt ID: "))
+        self.atm.print_receipt(receipt_id)
+
     def run(self):
         while True:
             print("-" * 64)
@@ -35,7 +39,8 @@ class CLIInterface:
             print("4. Withdraw")
             print("5. Transfer")
             print("6. Mini Statement")
-            print("7. Logout")
+            print("7. Print Receipt")
+            print("8. Logout")
             print("-" * 64, end="\n")
             choice = input("Enter choice: ")
 
@@ -85,6 +90,8 @@ class CLIInterface:
                 else:
                     print(mini_statement)
             elif choice == "7":
+                self.print_receipt_menu()
+            elif choice == "8":
                 self.atm.current_user = None
                 self.atm.current_account = None
                 print("Logged out.")

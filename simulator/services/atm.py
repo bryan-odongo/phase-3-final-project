@@ -3,6 +3,7 @@ from models.transaction import Transaction
 from models.account import Account
 from models.user import User
 from models.transfer import Transfer
+from models.receipt import TransactionReceipt
 
 
 class ATM:
@@ -113,3 +114,6 @@ class ATM:
             )
             return [str(transaction) for transaction in transactions]
         return "No account selected."
+
+    def print_receipt(self, receipt_id):
+        TransactionReceipt.print_receipt(self.db, receipt_id)

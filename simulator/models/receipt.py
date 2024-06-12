@@ -5,5 +5,23 @@ class TransactionReceipt:
         self.printed_at = printed_at
         self.details = details
 
-    def print_receipt(self):
-        return f"Receipt {self.receipt_id}: Transaction {self.transaction_id} printed at {self.printed_at}\nDetails: {self.details}"
+    @staticmethod
+    def create_receipt(db, transaction_id, details):
+        query = """
+        INSERT INTO TransactionReceipts (transaction_id, details)
+        VALUES (?, ?)
+        """
+        db.execute_query(query, (transaction_id, details))
+
+    @staticmethod
+    def print_receipt(db, receipt_id):
+        receipt = db.fetch_one(
+            "SELECT * FROM TransactionReceipts WHERE receipt_id = ?", (receipt_id,)
+        )
+        if receipt:
+            print(f"Receipt ID: {receipt['receipt_id']}")
+            print(f"Transaction ID: {receipt['transaction_id']}")
+            print(f"Printed At: {receipt['printed_at']}")
+            print(f"Details: {receipt['details']}")
+        else:
+            print("Receipt not found.")
