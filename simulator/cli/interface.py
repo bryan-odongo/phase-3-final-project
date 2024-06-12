@@ -66,13 +66,14 @@ class CLIInterface:
                 else:
                     print("Withdrawal failed.")
             elif choice == "5":
-                to_account_id = int(input("Enter target account ID: "))
+                from_account_id = int(input("Enter your account ID: "))
+                to_account_id = int(input("Enter recipient account ID: "))
                 amount = float(input("Enter amount to transfer: "))
-                if self.atm.transfer(to_account_id, amount):
-                    print("Transfer successful.")
-                    print("-" * 64, end="\n")
-                else:
-                    print("Transfer failed.")
+                success, message = self.atm.transfer(
+                    from_account_id, to_account_id, amount
+                )
+                print(message)
+                print("-" * 64, end="\n")
             elif choice == "6":
                 mini_statement = self.atm.mini_statement()
                 if mini_statement != "No account selected.":

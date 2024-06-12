@@ -1,6 +1,8 @@
+import datetime
 from models.transaction import Transaction
 from models.account import Account
 from models.user import User
+from models.transfer import Transfer
 
 
 class ATM:
@@ -56,22 +58,53 @@ class ATM:
                 return True
         return "No account selected."
 
-    def transfer(self, to_account_id, amount):
-        if self.current_account:
-            to_account = Account.get_account_by_id(self.db, to_account_id)
-            if to_account:
-                if self.current_account.withdraw(self.db, amount):
-                    to_account.deposit(self.db, amount)
-                    Transaction.create_transaction(
-                        self.db,
-                        self.current_account.account_id,
-                        "Transfer",
-                        amount,
-                        "2024-06-12 10:00:00",
-                        f"Transferred {amount} to account {to_account_id}",
-                    )
-                    return True
-        return False
+    def transfer(self, from_account_id, to_account_id, amount):
+        # Check if accounts exist
+        from_account = self.db.fetch_one(
+            "SELECT * FROM accounts WHERE account_id = ?", (from_account_id,)
+        )
+        to_account = self.db.fetch_one(
+            "SELECT * FROM accounts WHERE account_id = ?", (to_account_id,)
+        )
+
+        if not from_account or not to_account:
+            return False, "One or both accounts do not exist."
+
+        # Check if the from account has enough balance
+        from_account_balance = from_account[3]  # Balance is at index 3
+        if from_account_balance < amount:
+            return False, "Insufficient funds in the source account."
+
+        # Perform the transfer
+        new_from_balance = from_account_balance - amount
+        new_to_balance = to_account[3] + amount  # Balance is at index 3
+
+        # Update balances
+        self.db.execute_query(
+            "UPDATE accounts SET balance = ? WHERE account_id = ?",
+            (new_from_balance, from_account_id),
+        )
+        self.db.execute_query(
+            "UPDATE accounts SET balance = ? WHERE account_id = ?",
+            (new_to_balance, to_account_id),
+        )
+
+        # Record the transfer
+        timestamp = datetime.datetime.now().isoformat()
+        details = f"Transfer from account {from_account_id} to account {to_account_id}"
+        Transfer.create_transfer(
+            self.db, from_account_id, to_account_id, amount, timestamp, details
+        )
+
+        # Record transactions
+        Transaction.create_transaction(
+            self.db, from_account_id, "Transfer Out", amount, timestamp, details
+        )
+        Transaction.create_transaction(
+            self.db, to_account_id, "Transfer In", amount, timestamp, details
+        )
+
+        return True, "Transfer successful."
 
     def mini_statement(self):
         if self.current_account:

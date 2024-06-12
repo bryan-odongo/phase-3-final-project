@@ -1,5 +1,3 @@
-# models/user.py
-
 from utils.database import Database
 
 
