@@ -14,6 +14,8 @@ understand the operations of an ATM without the need for an actual banking inter
 - **PIN Validation:** Ensures that the entered PIN is correct for the given card number.
 
 ### Account Management
+![image](https://github.com/bryan-odongo/phase-3-final-project/assets/152975669/3e013dc2-52b8-48a5-88c9-513aa2a08b43)
+
 - **Check Balance:** Users can view their current account balance.
 - **Account Details:** Displays basic account information and transaction history.
 
