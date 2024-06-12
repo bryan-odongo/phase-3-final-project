@@ -4,16 +4,21 @@ class CLIInterface:
 
     def run(self):
         while True:
+            print("-" * 64)
             print("\nWelcome to the ATM Simulator")
+            print("-" * 64, end="\n")
             print("1. Login")
             print("2. Exit")
-            choice = input("Enter choice: ")
-
+            print("-" * 64)
+            choice = input("Enter choice (1 or 2): ")
+            print("-" * 64, end="\n")
             if choice == "1":
                 card_number = input("Enter your card number: ")
                 pin = input("Enter your PIN: ")
                 if self.atm.authenticate_user(card_number, pin):
+                    print("-" * 64, end="\n")
                     self.user_menu()
+
                 else:
                     print("Authentication failed. Try again.")
             elif choice == "2":
@@ -31,26 +36,33 @@ class CLIInterface:
             print("5. Transfer")
             print("6. Mini Statement")
             print("7. Logout")
+            print("-" * 64, end="\n")
             choice = input("Enter choice: ")
 
             if choice == "1":
-                account_id = int(input("Enter account ID: "))
+                account_id = int(input("Enter account ID (1 Saving or 2 Checking): "))
                 if self.atm.select_account(account_id):
-                    print("Account selected.")
+                    print(
+                        f"{'Checkings' if choice == 1 else 'Savings'} Account selected."
+                    )
+                    print("-" * 64, end="\n")
                 else:
                     print("Account selection failed.")
             elif choice == "2":
                 print("Current balance:", self.atm.check_balance())
+                print("-" * 64, end="\n")
             elif choice == "3":
                 amount = float(input("Enter amount to deposit: "))
                 if self.atm.deposit(amount):
                     print("Deposit successful.")
+                    print("-" * 64, end="\n")
                 else:
                     print("Deposit failed.")
             elif choice == "4":
                 amount = float(input("Enter amount to withdraw: "))
                 if self.atm.withdraw(amount):
                     print("Withdrawal successful.")
+                    print("-" * 64, end="\n")
                 else:
                     print("Withdrawal failed.")
             elif choice == "5":
@@ -58,10 +70,19 @@ class CLIInterface:
                 amount = float(input("Enter amount to transfer: "))
                 if self.atm.transfer(to_account_id, amount):
                     print("Transfer successful.")
+                    print("-" * 64, end="\n")
                 else:
                     print("Transfer failed.")
             elif choice == "6":
-                print("Mini statement:", self.atm.mini_statement())
+                mini_statement = self.atm.mini_statement()
+                if mini_statement != "No account selected.":
+                    print("Mini statement:")
+                    print("-" * 64, end="\n")
+                    for transaction in mini_statement:
+                        print(transaction)
+                    print("-" * 64, end="\n")
+                else:
+                    print(mini_statement)
             elif choice == "7":
                 self.atm.current_user = None
                 self.atm.current_account = None

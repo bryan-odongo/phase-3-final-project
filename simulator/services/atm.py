@@ -1,28 +1,26 @@
 from models.transaction import Transaction
+from models.account import Account
+from models.user import User
 
 
 class ATM:
-    def __init__(self, users, accounts):
-        self.users = users
-        self.accounts = accounts
+    def __init__(self, db):
+        self.db = db
         self.current_user = None
         self.current_account = None
 
     def authenticate_user(self, card_number, pin):
-        for user in self.users:
-            if user.card_number == card_number and user.validate_pin(pin):
-                self.current_user = user
-                return True
+        user = User.get_user_by_card_number(self.db, card_number)
+        if user and user.validate_pin(pin):
+            self.current_user = user
+            return True
         return False
 
     def select_account(self, account_id):
-        for account in self.accounts:
-            if (
-                account.account_id == account_id
-                and account.user_id == self.current_user.user_id
-            ):
-                self.current_account = account
-                return True
+        account = Account.get_account_by_id(self.db, account_id)
+        if account and account.user_id == self.current_user.user_id:
+            self.current_account = account
+            return True
         return False
 
     def check_balance(self):
@@ -32,56 +30,53 @@ class ATM:
 
     def deposit(self, amount):
         if self.current_account:
-            if self.current_account.deposit(amount):
-                Transaction(
-                    transaction_id=len(Transaction.all_transactions) + 1,
-                    account_id=self.current_account.account_id,
-                    transaction_type="Deposit",
-                    amount=amount,
-                    timestamp="2024-06-12 10:00:00",
-                    details=f"Deposited {amount}",
+            if self.current_account.deposit(self.db, amount):
+                Transaction.create_transaction(
+                    self.db,
+                    self.current_account.account_id,
+                    "Deposit",
+                    amount,
+                    "2024-06-12 10:00:00",
+                    f"Deposited {amount}",
                 )
                 return True
         return "No account selected."
 
     def withdraw(self, amount):
         if self.current_account:
-            if self.current_account.withdraw(amount):
-                Transaction(
-                    transaction_id=len(Transaction.all_transactions) + 1,
-                    account_id=self.current_account.account_id,
-                    transaction_type="Withdraw",
-                    amount=amount,
-                    timestamp="2024-06-12 10:00:00",
-                    details=f"Withdrew {amount}",
+            if self.current_account.withdraw(self.db, amount):
+                Transaction.create_transaction(
+                    self.db,
+                    self.current_account.account_id,
+                    "Withdraw",
+                    amount,
+                    "2024-06-12 10:00:00",
+                    f"Withdrew {amount}",
                 )
                 return True
         return "No account selected."
 
     def transfer(self, to_account_id, amount):
         if self.current_account:
-            for account in self.accounts:
-                if account.account_id == to_account_id:
-                    if self.current_account.withdraw(amount):
-                        account.deposit(amount)
-                        Transaction(
-                            transaction_id=len(Transaction.all_transactions) + 1,
-                            account_id=self.current_account.account_id,
-                            transaction_type="Transfer",
-                            amount=amount,
-                            timestamp="2024-06-12 10:00:00",
-                            details=f"Transferred {amount} to account {to_account_id}",
-                        )
-                        return True
+            to_account = Account.get_account_by_id(self.db, to_account_id)
+            if to_account:
+                if self.current_account.withdraw(self.db, amount):
+                    to_account.deposit(self.db, amount)
+                    Transaction.create_transaction(
+                        self.db,
+                        self.current_account.account_id,
+                        "Transfer",
+                        amount,
+                        "2024-06-12 10:00:00",
+                        f"Transferred {amount} to account {to_account_id}",
+                    )
+                    return True
         return False
 
     def mini_statement(self):
         if self.current_account:
-            # Retrieve last 5 transactions for simplicity
-            transactions = [
-                t
-                for t in Transaction.all_transactions
-                if t.account_id == self.current_account.account_id
-            ][-5:]
-            return transactions
+            transactions = Transaction.get_transactions_by_account_id(
+                self.db, self.current_account.account_id
+            )
+            return [str(transaction) for transaction in transactions]
         return "No account selected."
